@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <h1>Testing WebSocket...</h1>
+    <p>Check your Django server terminal.</p>
+
+    <script>
+        console.log("Attempting to connect to test WebSocket...");
+        const testSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/test/'
+        );
+
+        testSocket.onopen = function(e) {
+            console.log("Test WebSocket connection successful!");
+            alert("SUCCESS: The test WebSocket connected!");
+        };
+
+        testSocket.onerror = function(e) {
+            console.error("Test WebSocket connection failed.");
+            alert("FAIL: The test WebSocket could not connect. Check the console for errors.");
+        };
+    </script>
+</body>
+</html>

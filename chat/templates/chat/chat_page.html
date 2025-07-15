@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LLM Chat</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #343541; color: #ececf1; margin: 0; }
+        #chat-container { display: flex; flex-direction: column; height: 100vh; }
+        #chat-log { flex-grow: 1; overflow-y: auto; padding: 20px; }
+        .message { margin-bottom: 20px; display: flex; }
+        .message-content { max-width: 80%; padding: 15px; border-radius: 12px; line-height: 1.5; }
+        .user-message .message-content { background-color: transparent; }
+        .bot-message .message-content { background-color: #444654; }
+        .username { font-weight: bold; margin-bottom: 5px; font-size: 0.9em; }
+        .user-message .username { color: #A893F3; } /* User color */
+        .bot-message .username { color: #55BBAA; } /* Bot color */
+        #chat-form { display: flex; padding: 20px; border-top: 1px solid #444654; background-color: #40414F;}
+        #chat-message-input { flex-grow: 1; padding: 12px; border-radius: 8px; border: 1px solid #5a5c6d; background-color: #40414F; color: #ececf1; font-size: 1em; }
+        #chat-message-submit { margin-left: 10px; padding: 12px 20px; border: none; border-radius: 8px; background-color: #55BBAA; color: white; cursor: pointer; font-size: 1em; }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-log">
+            {% for msg in messages %}
+                <div class="message {% if msg.user.username == 'LLM_Bot' %}bot-message{% else %}user-message{% endif %}">
+                    <div class="message-content">
+                        <div class="username">{{ msg.user.username }}</div>
+                        {{ msg.message|linebreaksbr }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <form id="chat-form">
+            <input id="chat-message-input" type="text" autocomplete="off" placeholder="Send a message...">
+            <button id="chat-message-submit">Send</button>
+        </form>
+    </div>
+
+    {{ request.user.username|json_script:"user_username" }}
+
+    <script>
+        const userUsername = JSON.parse(document.getElementById('user_username').textContent);
+        const chatLog = document.getElementById('chat-log');
+
+        const chatSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/chat/'
+        );
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            const messageDiv = document.createElement('div');
+            const messageContentDiv = document.createElement('div');
+            const usernameDiv = document.createElement('div');
+
+            messageDiv.classList.add('message');
+            messageContentDiv.classList.add('message-content');
+            usernameDiv.classList.add('username');
+
+            if (data.username === 'LLM_Bot') {
+                messageDiv.classList.add('bot-message');
+                usernameDiv.style.color = '#55BBAA';
+            } else {
+                messageDiv.classList.add('user-message');
+                usernameDiv.style.color = '#A893F3';
+            }
+
+            usernameDiv.textContent = data.username;
+            messageContentDiv.innerText = data.message;
+
+            messageContentDiv.prepend(usernameDiv);
+            messageDiv.appendChild(messageContentDiv);
+            chatLog.appendChild(messageDiv);
+            chatLog.scrollTop = chatLog.scrollHeight; // Auto-scroll
+        };
+
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');
+        };
+
+        document.getElementById('chat-form').onsubmit = function(e) {
+            e.preventDefault();
+            const messageInputDom = document.getElementById('chat-message-input');
+            const message = messageInputDom.value;
+            if (message.trim() === '') return;
+
+            chatSocket.send(JSON.stringify({
+                'message': message
+            }));
+            messageInputDom.value = '';
+        };
+
+        // Scroll to bottom on page load
+        window.onload = () => {
+            chatLog.scrollTop = chatLog.scrollHeight;
+        };
+    </script>
+</body>
+</html>
