@@ -13,7 +13,7 @@ pipeline {
                 bat 'pause 10'
                 bat 'docker image rm -f jango-chat:1.0 2>nul || exit 0'
                 bat 'pause 10'
-                bat 'kubectl delete secret django-superuser-secret'
+                bat 'kubectl delete secret django-superuser-secret --ignore-not-found=true'
                 bat 'pause 10'
                 bat 'npm run clean_windows 2>nul || exit 0'
             }
