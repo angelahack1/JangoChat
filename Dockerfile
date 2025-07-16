@@ -21,6 +21,6 @@ ENTRYPOINT ["/home/appuser/app/entrypoint.sh"]
 
 EXPOSE $PORT
 # The command to run when the container starts
-CMD ["daphne", "-b", "0.0.0.0", "-p", "$PORT", "JangoChat.asgi:application"]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "JangoChat.asgi:application"]
 
 
